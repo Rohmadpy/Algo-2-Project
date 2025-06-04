@@ -5,6 +5,7 @@ import os
 from datetime import date
 from tabulate import tabulate
 import time
+import sort
 
 # file_path = os.path.abspath("peta.html")
 # webbrowser.open(f"file://{file_path}")
@@ -124,7 +125,7 @@ def login(no_hp, password):
                 menu_pembeli(id_akun,nama)
             clear_terminal()
         else:
-            print("Login gagal: Nomor HP atau password salah.")
+            input("Login gagal: Nomor HP atau password salah.")
             kembali()
 
     except Exception as e:
@@ -151,7 +152,7 @@ def menu_owner(nama):
         elif pilihan == "3":
             pencatatan_transaksi()
         elif pilihan == "4":
-            pengelolaan_stock()
+            sort.menu()
         elif pilihan == "5":
             print("Terima kasih telah menggunakan aplikasi ini.")
             clear_terminal()

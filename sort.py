@@ -1,12 +1,11 @@
 import psycopg2
 
-
 conn = psycopg2.connect(
     host="localhost",
-    database="nama_database",  
+    database="Algo2",
     user="postgres",
-    password="password"
-)
+    password="syadid1306",
+    port=5432)
 cur = conn.cursor()
 
 def selection_sort_by_stok(data, ascending=True):
@@ -69,9 +68,7 @@ def menu():
         else:
             print("Pilihan tidak valid.")
 
-menu()
+# menu()
 
-cur.close()
-conn.close()
-
-print("hellow wolrd")
+# cur.close()
+# conn.close()
