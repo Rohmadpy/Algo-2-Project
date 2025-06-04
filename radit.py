@@ -20,6 +20,8 @@ if akun_data is None:
 id_akun = akun_data[0]
 
 print(f"✅ ID akun otomatis terisi: {id_akun}")
+
+#########################
 nama_sayur = input("Masukkan nama sayur: ").strip()
 jumlah_beli = int(input("Masukkan jumlah beli: "))
 

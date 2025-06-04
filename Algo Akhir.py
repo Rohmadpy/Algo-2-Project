@@ -1,90 +1,228 @@
 
-# import webbrowser
-# import os
+import psycopg2
+import webbrowser
+import os
+from datetime import date
+from tabulate import tabulate
+import time
 
 # file_path = os.path.abspath("peta.html")
 # webbrowser.open(f"file://{file_path}")
-
-# # masuk gak guys? hah
-# # haloo \
-
-import psycopg2
-
-conn = psycopg2.connect(
+def connect_db():
+    conn = psycopg2.connect(
     host="localhost",
-    database="nama_database",  
-    user="postgres",           
-    password="password"       
-)
-cur = conn.cursor()
+    database="Algo2",
+    user="postgres",
+    password="",
+    port=5432
+    )     
+    return conn
 
-def selection_sort_by_stok(data, ascending=True):
-    n = len(data)
-    for i in range(n):
-        idx_extreme = i
-        for j in range(i + 1, n):
-            if ascending:
-                if data[j][2] < data[idx_extreme][2]:  
-                    idx_extreme = j
-            else:
-                if data[j][2] > data[idx_extreme][2]:
-                    idx_extreme = j
-        data[i], data[idx_extreme] = data[idx_extreme], data[i]
-    return data
-
-
-def ambil_semua_data():
-    cur.execute("SELECT * FROM sayur")
-    return cur.fetchall()
-
-def tampilkan_data(data):
-    print("\nData Sayur:")
-    for row in data:
-        print(f"ID: {row[0]}, Nama: {row[1]}, Stok: {row[2]}, Harga: {row[3]}")
-
-def cari_sayur_berdasarkan_nama(nama_sayur):
-    cur.execute("SELECT * FROM sayur WHERE LOWER(nama_sayur) LIKE %s", ('%' + nama_sayur.lower() + '%',))
-    hasil = cur.fetchall()
-    print(f"\nHasil Pencarian untuk '{nama_sayur}':")
-    if hasil:
-        tampilkan_data(hasil)
+def clear_terminal():
+    os.system('cls')
+    
+def kembali ():
+    
+    inputan_kembali = input("Tekan Enter untuk kembali ke menu utama...")
+    if inputan_kembali == "":
+        clear_terminal()
     else:
-        print("Tidak ditemukan.")
-
-
-def menu():
+        kembali()
+        
+def main():
     while True:
-        print("\n==== Menu Pengelolaan Stok Sayur ====")
-        print("1. Tampilkan sayur dengan stok paling sedikit (Selection Sort)")
-        print("2. Cari sayur berdasarkan nama")
+        print("\n=== MENU ===")
+        print("1. Register")
+        print("2. Login")
         print("3. Keluar")
         pilihan = input("Pilih menu (1/2/3): ")
 
-        if pilihan == '1':
-            data = ambil_semua_data()
-            data_sorted = selection_sort_by_stok(data, ascending=True)
-            tampilkan_data(data_sorted)
-        elif pilihan == '2':
-            nama = input("Masukkan nama sayur yang ingin dicari: ")
-            cari_sayur_berdasarkan_nama(nama)
-        elif pilihan == '3':
+        if pilihan == "1":
+            os.system('cls')
+            nama = input("Nama: ")
+            no_hp = input("No HP: ")
+            password = input("Password (max 8 karakter): ")
+            # status_akun = input("Status akun (misalnya A): ")
+            # latitude = float(input("Latitude: "))
+            # longitude = float(input("Longitude: "))
+            register(nama, no_hp, password)
+            os.system('cls')
+
+        elif pilihan == "2":
+            no_hp = input("No HP: ")
+            password = input("Password: ")
+            login(no_hp, password)
+            os.system('cls')
+
+        elif pilihan == "3":
+            print("Keluar dari program.")
+            os.system('cls')
+            break
+
+        else:
+            print("Pilihan tidak valid.")
+
+
+def register(nama, no_hp, password):
+    print("Memuat Peta", end="")
+    for i in range(5):
+        print(".", end="", flush=True)
+        time.sleep(0.5) 
+    file_path = os.path.abspath("peta.html")
+    webbrowser.open(f"file://{file_path}")
+    lokasi=input("Masukkan Lokasi Anda : ")
+    latitude,longitude=lokasi.split(',')
+    try:
+        conn = connect_db()
+        cur = conn.cursor()
+
+        # Insert ke tabel akun
+        cur.execute("""
+            INSERT INTO akun (nama, no_hp, password, status_akun)
+            VALUES (%s, %s, %s, %s) RETURNING id_akun;
+        """, (nama, no_hp, password, "1"))
+        id_akun = cur.fetchone()[0]
+
+        # Insert ke tabel lokasi
+        cur.execute("""
+            INSERT INTO lokasi (latitude, longitude, id_akun)
+            VALUES (%s, %s, %s);
+        """, (latitude, longitude, id_akun))
+
+        conn.commit()
+        print("Registrasi berhasil!")
+        inputan_kembali = input("Tekan Enter untuk kembali ke menu utama...")
+
+    except psycopg2.IntegrityError:
+        conn.rollback()
+        inputan_kembali = input("Registrasi gagal: Nomor HP sudah digunakan atau data tidak valid.")
+    except Exception as e:
+        conn.rollback()
+        inputan_kembali = input("Terjadi kesalahan:", e)
+    finally:
+        cur.close()
+        conn.close()
+        
+def login(no_hp, password):
+    try:
+        conn = connect_db()
+        cur = conn.cursor()
+
+        cur.execute("""
+            SELECT id_akun, nama, status_akun FROM akun
+            WHERE no_hp = %s AND password = %s;
+        """, (no_hp, password))
+        user = cur.fetchone()
+        id_akun= user[0]
+        nama= user[1]
+        status = user[2]
+
+        if user:
+            if status == "0":
+                menu_owner(nama)
+            else : 
+                menu_pembeli(id_akun,nama)
+            clear_terminal()
+        else:
+            print("Login gagal: Nomor HP atau password salah.")
+            kembali()
+
+    except Exception as e:
+        print("Terjadi kesalahan saat login:", e)
+    finally:
+        cur.close()
+        conn.close()
+
+def menu_owner(nama):
+    while True :
+        clear_terminal()
+        print(f"halo {nama} selamat datang di aplikasi petani")
+        print("=========================menu utama=========================")
+        print("1. penjualan hasil tani")
+        print("2. Rute pengiriman ")
+        print("3.pencatatan transaksi")
+        print("4. pengelolaan stock")
+        print("5. Keluar")
+        pilihan = input("Masukkan pilihan anda: ")
+        if pilihan == "1":
+            penjualan_hasil_tani()
+        elif pilihan == "2":
+            rute_pengiriman()
+        elif pilihan == "3":
+            pencatatan_transaksi()
+        elif pilihan == "4":
+            pengelolaan_stock()
+        elif pilihan == "5":
+            print("Terima kasih telah menggunakan aplikasi ini.")
+            clear_terminal()
+            break
+        else:
+            print("Pilihan tidak valid.")
+        
+def menu_pembeli(id_akun, nama):
+    while True :
+        clear_terminal()
+        print(f"halo {nama} selamat datang di aplikasi petani")
+        print("=========================menu utama=========================")
+        print("1. Beli Hasil Tani")
+        print("2. Keluar")
+        pilihan = input("Masukkan pilihan anda: ")
+        if pilihan == "1":
+            beli_hasil_tani(id_akun)
+        elif pilihan == "2":
+            print("Terima kasih telah menggunakan aplikasi ini.")
+            clear_terminal()
             break
         else:
             print("Pilihan tidak valid.")
 
-menu()
+def beli_hasil_tani (id_akun):
+    print("Menu Beli Hasil Tani")
+    nama_sayur = input("Masukkan nama sayur: ").strip()
+    jumlah_beli = int(input("Masukkan jumlah beli: "))
+    
+    conn = connect_db()
+    cur = conn.cursor()
+    query = f"""
+        SELECT id_sayur, harga_satuan
+        FROM sayur
+        WHERE nama_sayur ilike '{nama_sayur}'
+    """
+    cur.execute(query)
 
-cur.close()
-conn.close()
+    data_sayur = cur.fetchone()
 
-print ("hellow wolrd")
+    if data_sayur is None:
+        input("❌ Sayur tidak ditemukan dalam database.")
+    else:
+        id_sayur, harga_satuan = data_sayur
+        total_harga = harga_satuan * jumlah_beli
+        status = 'P'
 
-import psycopg2
-import webbrowser
-import os
+        insert_query = f"""
+            INSERT INTO request_pembelian (id_akun, id_sayur, nama_sayur, jumlah_beli, total_harga, status)
+            VALUES ({id_akun}, {id_sayur}, '{nama_sayur}', {jumlah_beli}, {total_harga}, '{status}')
+        """
+        cur.execute(insert_query)
+        conn.commit()
+        input("✅ Request pembelian berhasil disimpan!")
 
-file_path = os.path.abspath("peta.html")
-webbrowser.open(f"file://{file_path}")
+    # max_budget = int(input("Masukkan budget maksimal: "))
 
+ 
+def penjualan_hasil_tani():
+    print("Menu Penjualan Hasil Tani")
+    # Tambahkan logika untuk penjualan hasil tani
 
-# mhaloo
+def rute_pengiriman():
+    print("Menu Rute Pengiriman")
+    # Tambahkan logika untuk rute pengiriman
+def pengelolaan_stock():
+    print("Menu Pengelolaan Stock")
+    # Tambahkan logika untuk pengelolaan stock
+def pencatatan_transaksi():
+    print("Menu Pencatatan Transaksi")
+    # Tambahkan logika untuk pencatatan transaksi
+    
+    
+main()
