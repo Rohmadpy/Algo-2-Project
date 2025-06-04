@@ -1,7 +1,6 @@
 import webbrowser
 import os
 import psycopg2
-from datetime import date
 
 # file_path = os.path.abspath("peta.html")
 # webbrowser.open(f"file://{file_path}")
@@ -74,7 +73,7 @@ def login(no_hp, password):
         user = cur.fetchone()
 
         if user:
-            menu_utama(user[1])  # user[1] adalah nama
+            menu_owner(no_hp)
             clear_terminal()
         else:
             print("Login gagal: Nomor HP atau password salah.")
@@ -87,41 +86,10 @@ def login(no_hp, password):
         conn.close()
 
 # MENU UTAMA
-def main():
-    while True:
-        print("\n=== MENU ===")
-        print("1. Register")
-        print("2. Login")
-        print("3. Keluar")
-        pilihan = input("Pilih menu (1/2/3): ")
 
-        if pilihan == "1":
-            nama = input("Nama: ")
-            no_hp = input("No HP: ")
-            password = input("Password (max 8 karakter): ")
-            status_akun = input("Status akun (misalnya A): ")
-            latitude = float(input("Latitude: "))
-            longitude = float(input("Longitude: "))
-            register(nama, no_hp, password, status_akun, latitude, longitude)
-            clear_terminal()
-
-        elif pilihan == "2":
-            no_hp = input("No HP: ")
-            password = input("Password: ")
-            login(no_hp, password)
-            clear_terminal()
-
-        elif pilihan == "3":
-            print("Keluar dari program.")
-            clear_terminal()
-            break
-
-        else:
-            print("Pilihan tidak valid.")
-            
-def menu_utama(nama):
+def menu_owner(no_hp):
     clear_terminal()
-    print(f"halo {nama} selamat datang di aplikasi petani")
+    print(f"halo {no_hp} selamat datang di aplikasi petani")
     print("=========================menu utama=========================")
     print("1. penjualan hasil tani")
     print("2. Rute pengiriman ")
@@ -130,7 +98,7 @@ def menu_utama(nama):
     print("5. Keluar")
     pilihan = input("Masukkan pilihan anda: ")
     if pilihan == "1":
-        penjualan_hasil_tani(nama)
+        penjualan_hasil_tani(no_hp)
     elif pilihan == "2":
         rute_pengiriman()
     elif pilihan == "3":
@@ -158,4 +126,3 @@ def pencatatan_transaksi():
     print("Menu Pencatatan Transaksi")
     # Tambahkan logika untuk pencatatan transaksi
 
-main()

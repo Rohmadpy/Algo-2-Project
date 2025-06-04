@@ -11,9 +11,9 @@ import time
 def connect_db():
     conn = psycopg2.connect(
     host="localhost",
-    database="Algo2",
+    database="dtbase",
     user="postgres",
-    password="",
+    password="Rohmad_25",
     port=5432
     )     
     return conn
